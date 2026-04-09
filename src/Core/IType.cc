@@ -33,26 +33,26 @@ void IType::Parse()
 
 void IType::mnemonicHelper()
 {
-    const uint32_t opc= Layout_.I.opc;
-    if(opc == 0x73) {
+    const uint32_t OPC= Layout_.I.opc;
+    if(OPC == 0x73) {
         if(InstAssembly_.size() > 1) {
             InstAssembly_.resize(1);
         }
         return;
     }
 
-    const int32_t imm= static_cast<int32_t>(static_cast<int16_t>(Layout_.I.imm0tB & 0xFFF));
-    const std::string immStr= std::to_string(imm);
+    const int32_t IMM        = static_cast<int32_t>(static_cast<int16_t>(Layout_.I.imm0tB & 0xFFF));
+    const std::string IMM_STR= std::to_string(IMM);
 
-    if(opc == 0x0F) {
+    if(OPC == 0x0F) {
         auto z= isa::LOOKUP_REG_NAME(0, HasSetABI_);
-        appendOperands({" ", z, ",", z, ",", std::string_view(immStr) });
+        appendOperands({ " ", z, ",", z, ",", std::string_view(IMM_STR) });
         return;
     }
 
     auto rd = isa::LOOKUP_REG_NAME(Layout_.I.rd, HasSetABI_);
     auto rs1= isa::LOOKUP_REG_NAME(Layout_.I.rs1, HasSetABI_);
-    appendOperands({" ", rd, ",", rs1, ",", std::string_view(immStr) });
+    appendOperands({ " ", rd, ",", rs1, ",", std::string_view(IMM_STR) });
 }
 
 const std::vector<std::string> &IType::Disassembly()
@@ -75,16 +75,16 @@ const InstLayout &IType::Assembly()
     const auto &info= LookupIdxAndInfo();
 
     Layout_.I.opc= Opcode_= info.opcode_;
-    const uint16_t key= info.funct_;
+    const uint16_t KEY    = info.funct_;
 
     if(info.opcode_ == 0x13) {
-        Layout_.I.fct3  = key & 7;
-        Layout_.I.imm0tB= (static_cast<uint32_t>((key >> 3) & 0x7F) << 5);
+        Layout_.I.fct3  = KEY & 7;
+        Layout_.I.imm0tB= (static_cast<uint32_t>((KEY >> 3) & 0x7F) << 5);
     } else if(info.opcode_ == 0x73) {
         Layout_.I.fct3  = 0;
-        Layout_.I.imm0tB= static_cast<uint32_t>(key & 0xFFF);
+        Layout_.I.imm0tB= static_cast<uint32_t>(KEY & 0xFFF);
     } else {
-        Layout_.I.fct3  = key & 7;
+        Layout_.I.fct3  = KEY & 7;
         Layout_.I.imm0tB= 0;
     }
 
@@ -100,15 +100,15 @@ const InstLayout &IType::Assembly()
         if(auto rs1Opt= isa::LOOKUP_REG_IDX(InstAssembly_.at(2))) {
             Layout_.I.rs1= *rs1Opt;
         }
-        const int32_t imm= std::stoi(InstAssembly_.at(3));
+        const int32_t IMM= std::stoi(InstAssembly_.at(3));
         if(info.opcode_ == 0x13) {
             if(Layout_.I.fct3 == 1 || Layout_.I.fct3 == 5) {
-                Layout_.I.imm0tB= (Layout_.I.imm0tB & UINT32_C(0xFE0)) | (static_cast<uint32_t>(imm) & 0x1F);
+                Layout_.I.imm0tB= (Layout_.I.imm0tB & UINT32_C(0xFE0)) | (static_cast<uint32_t>(IMM) & 0x1F);
             } else {
-                Layout_.I.imm0tB= static_cast<uint32_t>(imm) & 0xFFF;
+                Layout_.I.imm0tB= static_cast<uint32_t>(IMM) & 0xFFF;
             }
         } else if(info.opcode_ != 0x73) {
-            Layout_.I.imm0tB= static_cast<uint32_t>(imm) & 0xFFF;
+            Layout_.I.imm0tB= static_cast<uint32_t>(IMM) & 0xFFF;
         }
     }
 
@@ -124,7 +124,7 @@ IBaseInstType::KeyT IType::calculateFunctKey()
         FunctKey_= static_cast<KeyT>(((Layout_.I.imm0tB >> 5) << 3) | Layout_.I.fct3);
         break;
     case 0x73:
-        FunctKey_= static_cast<KeyT>((0x73u << 8) | (Layout_.I.imm0tB & 0xFFFu));
+        FunctKey_= static_cast<KeyT>((0x73U << 8) | (Layout_.I.imm0tB & 0xFFFU));
         break;
     default:
         FunctKey_= static_cast<KeyT>((static_cast<uint32_t>(Layout_.I.opc) << 8) | Layout_.I.fct3);

@@ -8,27 +8,27 @@ namespace {
 
 int32_t decodeSImm12(const InstLayout &L)
 {
-    const uint32_t u= (static_cast<uint32_t>(L.S.imm5tB) << 5) | static_cast<uint32_t>(L.S.imm0t4);
-    return static_cast<int32_t>(u << 20) >> 20;
+    const uint32_t U= (static_cast<uint32_t>(L.S.imm5tB) << 5) | static_cast<uint32_t>(L.S.imm0t4);
+    return static_cast<int32_t>(U << 20) >> 20;
 }
 
 void encodeSImm12(InstLayout &L, int32_t imm)
 {
-    const uint32_t u= static_cast<uint32_t>(imm) & 0xFFFU;
-    L.S.imm0t4= u & 0x1FU;
-    L.S.imm5tB = (u >> 5) & 0x7FU;
+    const uint32_t U= static_cast<uint32_t>(imm) & 0xFFFU;
+    L.S.imm0t4      = U & 0x1FU;
+    L.S.imm5tB      = (U >> 5) & 0x7FU;
 }
 
 bool parseStoreAddr(std::string_view tok, int32_t &immOut, std::string &regStrOut)
 {
-    const auto lparen= tok.find('(');
-    const auto rparen= tok.find(')');
-    if(lparen == std::string_view::npos || rparen == std::string_view::npos || rparen <= lparen + 1U) {
+    const auto LPAREN= tok.find('(');
+    const auto RPAREN= tok.find(')');
+    if(LPAREN == std::string_view::npos || RPAREN == std::string_view::npos || RPAREN <= LPAREN + 1U) {
         return false;
     }
-    const std::string immPart(tok.substr(0, lparen));
-    regStrOut.assign(tok.substr(lparen + 1, rparen - lparen - 1));
-    immOut= static_cast<int32_t>(std::stol(immPart, nullptr, 0));
+    const std::string IMM_PART(tok.substr(0, LPAREN));
+    regStrOut.assign(tok.substr(LPAREN + 1, RPAREN - LPAREN - 1));
+    immOut= static_cast<int32_t>(std::stol(IMM_PART, nullptr, 0));
     return true;
 }
 
@@ -65,10 +65,10 @@ void SType::Parse()
 
 void SType::mnemonicHelper()
 {
-    auto rs2= isa::LOOKUP_REG_NAME(Layout_.S.rs2, HasSetABI_);
-    auto rs1= isa::LOOKUP_REG_NAME(Layout_.S.rs1, HasSetABI_);
-    const std::string immStr= std::to_string(decodeSImm12(Layout_));
-    appendOperands({" ", rs2, ",", std::string_view(immStr), "(", rs1, ")" });
+    auto rs2                 = isa::LOOKUP_REG_NAME(Layout_.S.rs2, HasSetABI_);
+    auto rs1                 = isa::LOOKUP_REG_NAME(Layout_.S.rs1, HasSetABI_);
+    const std::string IMM_STR= std::to_string(decodeSImm12(Layout_));
+    appendOperands({ " ", rs2, ",", std::string_view(IMM_STR), "(", rs1, ")" });
 }
 
 const std::vector<std::string> &SType::Disassembly()
@@ -91,14 +91,14 @@ const InstLayout &SType::Assembly()
     const auto &info= LookupIdxAndInfo();
 
     Layout_.S.opc= Opcode_= info.opcode_;
-    Layout_.S.fct3= static_cast<uint32_t>(info.funct_ & 7U);
+    Layout_.S.fct3        = static_cast<uint32_t>(info.funct_ & 7U);
 
     if(InstAssembly_.size() >= 4U) {
         if(auto rs2Opt= isa::LOOKUP_REG_IDX(InstAssembly_.at(1))) {
             Layout_.S.rs2= *rs2Opt;
         }
-        const int32_t imm= static_cast<int32_t>(std::stol(InstAssembly_.at(2), nullptr, 0));
-        encodeSImm12(Layout_, imm);
+        const int32_t IMM= static_cast<int32_t>(std::stol(InstAssembly_.at(2), nullptr, 0));
+        encodeSImm12(Layout_, IMM);
         if(auto rs1Opt= isa::LOOKUP_REG_IDX(InstAssembly_.at(3))) {
             Layout_.S.rs1= *rs1Opt;
         }
@@ -123,7 +123,7 @@ const InstLayout &SType::Assembly()
 
 IBaseInstType::KeyT SType::calculateFunctKey()
 {
-    FunctKey_= static_cast<KeyT>((static_cast<uint16_t>(Opcode_) << 8) | (Layout_.S.fct3 & 7U));
+    FunctKey_= static_cast<KeyT>((Opcode_ << 8) | (Layout_.S.fct3 & 7U));
     return FunctKey_;
 }
 

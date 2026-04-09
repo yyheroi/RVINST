@@ -13,12 +13,12 @@ uint32_t decodeUImm20(const InstLayout &L)
 
 uint32_t parseAsmImm20(std::string_view tok)
 {
-    const std::string s(tok);
-    const unsigned long v= std::stoul(s, nullptr, 0);
-    if(v <= 0xFFFFFUL) {
-        return static_cast<uint32_t>(v);
+    const std::string S(tok);
+    const unsigned long V= std::stoul(S, nullptr, 0);
+    if(V <= 0xFFFFFUL) {
+        return static_cast<uint32_t>(V);
     }
-    return (static_cast<uint32_t>(v) >> 12) & 0xFFFFFU;
+    return (static_cast<uint32_t>(V) >> 12) & 0xFFFFFU;
 }
 
 } // namespace
@@ -41,18 +41,18 @@ void UType::Parse()
     InstBitsField_.emplace_back(static_cast<uint32_t>(Layout_.U.rd));
     InstBitsField_.emplace_back(decodeUImm20(Layout_));
 
-    const uint32_t imm20= decodeUImm20(Layout_);
+    const uint32_t IMM20= decodeUImm20(Layout_);
     std::cout << "opcode: 0x" << std::hex << Opcode_ << '\n'
               << "Hexadecimal: 0x" << Layout_.entity_ << '\n'
               << "rd: " << std::dec << Layout_.U.rd << '\n'
-              << "imm[31:12]: " << imm20 << '\n';
+              << "imm[31:12]: " << IMM20 << '\n';
 }
 
 void UType::mnemonicHelper()
 {
-    auto rd = isa::LOOKUP_REG_NAME(Layout_.U.rd, HasSetABI_);
-    const std::string immStr= std::to_string(decodeUImm20(Layout_));
-    appendOperands({" ", rd, ",", std::string_view(immStr) });
+    auto rd                  = isa::LOOKUP_REG_NAME(Layout_.U.rd, HasSetABI_);
+    const std::string IMM_STR= std::to_string(decodeUImm20(Layout_));
+    appendOperands({ " ", rd, ",", std::string_view(IMM_STR) });
 }
 
 const std::vector<std::string> &UType::Disassembly()

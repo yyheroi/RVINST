@@ -17,7 +17,7 @@
 class InstFormatUI: public Gtk::Box {
 public:
     InstTypeRelationEntity format_;
-    Gtk::Label *pHexLabel_ = nullptr;
+    Gtk::Label *pHexLabel_= nullptr;
     InstCommST::BinaryFieldWidgetMap_u BinaryFieldWidgets_;
     InstCommST::AsmMnemonicWidgetMap_u AsmFieldWidgets_;
 

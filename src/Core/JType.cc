@@ -8,16 +8,16 @@ namespace {
 int32_t decodeJImm(const InstLayout &L)
 {
     uint32_t u= (static_cast<uint32_t>(L.J.imm14) << 20) | (static_cast<uint32_t>(L.J.imm1tA) << 1)
-                | (static_cast<uint32_t>(L.J.immB) << 11) | (static_cast<uint32_t>(L.J.immCt13) << 12);
-    if(u & (1u << 20)) {
-        u|= 0xFFE00000u;
+              | (static_cast<uint32_t>(L.J.immB) << 11) | (static_cast<uint32_t>(L.J.immCt13) << 12);
+    if((u & (1U << 20)) != 0U) {
+        u|= 0xFFE00000U;
     }
     return static_cast<int32_t>(u);
 }
 
 void encodeJImm(InstLayout &L, int32_t imm)
 {
-    uint32_t u= static_cast<uint32_t>(imm) & 0x1FFFFFu;
+    uint32_t u = static_cast<uint32_t>(imm) & 0x1FFFFFU;
     L.J.imm14  = (u >> 20) & 1;
     L.J.imm1tA = (u >> 1) & 0x3FF;
     L.J.immB   = (u >> 11) & 1;
@@ -47,20 +47,20 @@ void JType::Parse()
     InstBitsField_.emplace_back(static_cast<uint32_t>(Layout_.J.imm1tA));
     InstBitsField_.emplace_back(static_cast<uint32_t>(Layout_.J.imm14));
 
-    const int32_t imm= decodeJImm(Layout_);
+    const int32_t IMM= decodeJImm(Layout_);
     std::cout << "opcode: 0x" << std::hex << Opcode_ << '\n'
               << "Hexadecimal: 0x" << Layout_.entity_ << '\n'
               << "rd: " << std::dec << Layout_.J.rd << '\n'
-              << "imm: " << imm << '\n';
+              << "imm: " << IMM << '\n';
 }
 
 void JType::mnemonicHelper()
 {
-    auto rd       = isa::LOOKUP_REG_NAME(Layout_.J.rd, HasSetABI_);
-    int32_t imm   = decodeJImm(Layout_);
+    auto rd           = isa::LOOKUP_REG_NAME(Layout_.J.rd, HasSetABI_);
+    int32_t imm       = decodeJImm(Layout_);
     std::string immStr= std::to_string(imm);
 
-    appendOperands({" ", rd, ",", std::string_view(immStr) });
+    appendOperands({ " ", rd, ",", std::string_view(immStr) });
 }
 
 const std::vector<std::string> &JType::Disassembly()
