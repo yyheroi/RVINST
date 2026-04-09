@@ -63,6 +63,19 @@ add_link_options(
     $<$<CONFIG:Release,MinSizeRel>:-s>
 )
 
+include_directories(
+    inc
+    Logger
+)
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Logger/CMakeLists.txt")
+    message(FATAL_ERROR
+        "Logger submodule is missing (no Logger/CMakeLists.txt).\n"
+        "From the repository root run:\n"
+        "  git submodule update --init --recursive\n"
+        "or clone with: git clone --recurse-submodules <url>")
+endif()
+
 add_subdirectory(Logger)
 add_library(${backend} SHARED)
 add_executable(${PROJECT_NAME} tests/INST.cc)
