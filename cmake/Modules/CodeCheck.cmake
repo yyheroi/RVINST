@@ -13,10 +13,15 @@ function(_srcFilesParse target propertyName exclude)
         get_property(allParseFiles GLOBAL PROPERTY ${propertyName})
 
         foreach(f ${fmtFiles})
+            # OBJECT libs may list $<TARGET_OBJECTS:...>; not real paths for format/tidy.
+            if(f MATCHES [[^\$<]])
+                continue()
+            endif()
             get_filename_component(fileExt ${f} EXT)
             get_filename_component(abs_f ${f} ABSOLUTE)
             file(RELATIVE_PATH rel_f ${CMAKE_SOURCE_DIR} ${abs_f})
-            string(TOLOWER ${fileExt} fExtLow) # convert to lowercase
+            # Quote ${fileExt}: when empty, unquoted string(TOLOWER ${fileExt} out) breaks (no output var).
+            string(TOLOWER "${fileExt}" fExtLow) # convert to lowercase
 
             if(fExtLow IN_LIST excludeExtsBase)
                 message(VERBOSE "CodeCheck '${target}': Excluding '${f}' (ext:${fileExt})")

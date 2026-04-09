@@ -62,6 +62,19 @@ add_link_options(
     $<$<CONFIG:Release,MinSizeRel>:-s>
 )
 
+include_directories(
+    inc
+    Logger
+)
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Logger/CMakeLists.txt")
+    message(FATAL_ERROR
+        "Logger submodule is missing (no Logger/CMakeLists.txt).\n"
+        "From the repository root run:\n"
+        "  git submodule update --init --recursive\n"
+        "or clone with: git clone --recurse-submodules <url>")
+endif()
+
 add_subdirectory(Logger)
 set(backend ${PROJECT_NAME}_backend)
 add_library(${backend} SHARED)
@@ -76,51 +89,62 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${backend}
-)
-
-add_executable(
-    ${PROJECT_NAME}_gui
-    src/Gui/Main.cc
-)
-
-target_link_libraries(${PROJECT_NAME}_gui PRIVATE
-    ${backend}
-    ${GTKMM_LIBRARIES}
-)
-
-set_target_properties(${PROJECT_NAME}_gui PROPERTIES
-    SUFFIX ".exe"
+    $<$<CONFIG:Debug>:Logger>
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/resource)
-
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/InstStyle.css
     ${CMAKE_CURRENT_BINARY_DIR}/resource/InstStyle.css
     COPYONLY
 )
 
-target_compile_definitions(${PROJECT_NAME}_gui PUBLIC
+set(_inst_gui_common_src
+    src/Gui/AsmMnemonicWidget.cc
+    src/Gui/BinaryFieldWidget.cc
+    src/Gui/InstFormatUI.cc
+    src/Gui/RISCVInstructionWindow.cc
+)
+set(_inst_gui_common_hdr
+    inc/Gui/InsEntryParse.hh
+    inc/Gui/InstructionSummaryText.hh
+    inc/Gui/InstCommST.hh
+    inc/Gui/AsmMnemonicWidget.hh
+    inc/Gui/BinaryFieldWidget.hh
+    inc/Gui/InstFormatUI.hh
+    inc/Gui/RISCVInstructionWindow.hh
+)
+
+add_library(${PROJECT_NAME}_gui_common OBJECT ${_inst_gui_common_src} ${_inst_gui_common_hdr})
+target_include_directories(${PROJECT_NAME}_gui_common SYSTEM PRIVATE ${GTKMM_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME}_gui_common PRIVATE
     CSS_FILE_PATH="${CMAKE_CURRENT_BINARY_DIR}/resource/InstStyle.css"
 )
+
+add_executable(${PROJECT_NAME}_gui
+    src/Gui/Main.cc
+    src/Gui/RISCVApplication.cc
+    $<TARGET_OBJECTS:${PROJECT_NAME}_gui_common>
+)
+target_sources(${PROJECT_NAME}_gui PRIVATE inc/Gui/RISCVApplication.hh)
+
+add_executable(${PROJECT_NAME}_gui_rv32i_demo
+    src/Gui/Rv32iDemoMain.cc
+    $<TARGET_OBJECTS:${PROJECT_NAME}_gui_common>
+)
+target_sources(${PROJECT_NAME}_gui_rv32i_demo PRIVATE inc/Gui/Rv32iInstructionCases.hh)
+
+foreach(_t ${PROJECT_NAME}_gui ${PROJECT_NAME}_gui_rv32i_demo)
+    target_link_libraries(${_t} PRIVATE ${backend} ${GTKMM_LIBRARIES})
+    target_include_directories(${_t} SYSTEM PRIVATE ${GTKMM_INCLUDE_DIRS})
+    set_target_properties(${_t} PROPERTIES SUFFIX ".exe")
+endforeach()
 
 set_target_properties(${backend} PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 
     # OUTPUT_NAME "backEnd"
-)
-
-include_directories(
-    inc
-    Logger
-)
-
-target_include_directories(${PROJECT_NAME}_gui SYSTEM PRIVATE ${GTKMM_INCLUDE_DIRS})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${backend}
-    $<$<CONFIG:Debug>:Logger>
 )
 
 target_sources(${backend} PRIVATE
@@ -161,28 +185,7 @@ target_sources(${backend} PRIVATE
 
 )
 
-# GUI sources belong to the GUI executable target so GUI-specific
-# compile definitions (like CSS_FILE_PATH) apply to them.
-target_sources(${PROJECT_NAME}_gui PRIVATE
-    inc/Gui/InstCommST.hh
-
-    inc/Gui/AsmMnemonicWidget.hh
-    src/Gui/AsmMnemonicWidget.cc
-
-    inc/Gui/BinaryFieldWidget.hh
-    src/Gui/BinaryFieldWidget.cc
-
-    inc/Gui/InstFormatUI.hh
-    src/Gui/InstFormatUI.cc
-
-    inc/Gui/RISCVApplication.hh
-    src/Gui/RISCVApplication.cc
-
-    inc/Gui/RISCVInstructionWindow.hh
-    src/Gui/RISCVInstructionWindow.cc
-)
-
-SetupCodeChecks(${PROJECT_NAME} ${backend} ${PROJECT_NAME}_gui)
+SetupCodeChecks(${PROJECT_NAME} ${backend} ${PROJECT_NAME}_gui_common ${PROJECT_NAME}_gui ${PROJECT_NAME}_gui_rv32i_demo)
 
 DefineCodeChecksTargets("fmt" "tidy")
 get_filename_component(builddir ${CMAKE_CURRENT_BINARY_DIR} NAME)
