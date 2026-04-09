@@ -50,9 +50,9 @@ void UType::Parse()
 
 void UType::mnemonicHelper()
 {
-    auto rd = isa::LOOKUP_REG_NAME(Layout_.U.rd, HasSetABI_);
+    auto rd                 = isa::LOOKUP_REG_NAME(Layout_.U.rd, HasSetABI_);
     const std::string immStr= std::to_string(decodeUImm20(Layout_));
-    appendOperands({" ", rd, ",", std::string_view(immStr) });
+    appendOperands({ " ", rd, ",", std::string_view(immStr) });
 }
 
 const std::vector<std::string> &UType::Disassembly()

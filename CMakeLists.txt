@@ -16,6 +16,8 @@ project(INST
     LANGUAGES CXX
 )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
@@ -184,6 +186,9 @@ SetupCodeChecks(${PROJECT_NAME} ${backend} ${PROJECT_NAME}_gui)
 
 DefineCodeChecksTargets("fmt" "tidy")
 get_filename_component(builddir ${CMAKE_CURRENT_BINARY_DIR} NAME)
+if(NOT DEFINED rootBuilddir OR rootBuilddir STREQUAL "")
+    set(rootBuilddir "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
 get_filename_component(root ${rootBuilddir} NAME)
 
 if(ClangFormat_FOUND OR ClangTidy_FOUND)

@@ -27,12 +27,15 @@ public:
     InstFormatUI *sTypeUI_ {};
     InstFormatUI *bTypeUI_ {};
 
-    bool hasSetABI_              = false;
-    int selectedIsaIndex_       = 0;  // 0=AUTO, 1=RV32I, 2=RV64I, 3=RV128I
+    bool hasSetABI_      = false;
+    int selectedIsaIndex_= 0; // 0=AUTO, 1=RV32I, 2=RV64I, 3=RV128I
 
 public:
     RISCVInstructionWindow();
     ~RISCVInstructionWindow()= default;
+
+    /** Same as clicking "Parse Instruction" (for scripted / demo UI). */
+    void parseCurrentEntry();
 
 private:
     void onInsButtonParseClicked();

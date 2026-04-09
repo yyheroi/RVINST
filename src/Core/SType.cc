@@ -15,8 +15,8 @@ int32_t decodeSImm12(const InstLayout &L)
 void encodeSImm12(InstLayout &L, int32_t imm)
 {
     const uint32_t u= static_cast<uint32_t>(imm) & 0xFFFU;
-    L.S.imm0t4= u & 0x1FU;
-    L.S.imm5tB = (u >> 5) & 0x7FU;
+    L.S.imm0t4      = u & 0x1FU;
+    L.S.imm5tB      = (u >> 5) & 0x7FU;
 }
 
 bool parseStoreAddr(std::string_view tok, int32_t &immOut, std::string &regStrOut)
@@ -65,10 +65,10 @@ void SType::Parse()
 
 void SType::mnemonicHelper()
 {
-    auto rs2= isa::LOOKUP_REG_NAME(Layout_.S.rs2, HasSetABI_);
-    auto rs1= isa::LOOKUP_REG_NAME(Layout_.S.rs1, HasSetABI_);
+    auto rs2                = isa::LOOKUP_REG_NAME(Layout_.S.rs2, HasSetABI_);
+    auto rs1                = isa::LOOKUP_REG_NAME(Layout_.S.rs1, HasSetABI_);
     const std::string immStr= std::to_string(decodeSImm12(Layout_));
-    appendOperands({" ", rs2, ",", std::string_view(immStr), "(", rs1, ")" });
+    appendOperands({ " ", rs2, ",", std::string_view(immStr), "(", rs1, ")" });
 }
 
 const std::vector<std::string> &SType::Disassembly()
@@ -91,7 +91,7 @@ const InstLayout &SType::Assembly()
     const auto &info= LookupIdxAndInfo();
 
     Layout_.S.opc= Opcode_= info.opcode_;
-    Layout_.S.fct3= static_cast<uint32_t>(info.funct_ & 7U);
+    Layout_.S.fct3        = static_cast<uint32_t>(info.funct_ & 7U);
 
     if(InstAssembly_.size() >= 4U) {
         if(auto rs2Opt= isa::LOOKUP_REG_IDX(InstAssembly_.at(1))) {

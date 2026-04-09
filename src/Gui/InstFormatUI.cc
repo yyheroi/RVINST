@@ -1,11 +1,11 @@
 #include <functional>
 #include <gdkmm.h>
+#include <format>
 #include "Gui/InstFormatUI.hh"
 
-static void appendCopyAndToViewButtons(Gtk::Box &row, InstFormatUI *pUI,
-                                       const std::function<std::string()> &getContent)
+static void appendCopyAndToViewButtons(Gtk::Box &row, InstFormatUI *pUI, const std::function<std::string()> &getContent)
 {
-    auto pSpacer = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    auto pSpacer= Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
     pSpacer->set_hexpand(true);
 
     auto pCopyBtn  = Gtk::make_managed<Gtk::Button>("Copy");
@@ -14,10 +14,10 @@ static void appendCopyAndToViewButtons(Gtk::Box &row, InstFormatUI *pUI,
     pToViewBtn->set_margin_start(4);
 
     pCopyBtn->signal_clicked().connect([getContent] {
-        auto content = getContent();
+        auto content= getContent();
         if(!content.empty()) {
-            if(auto display = Gdk::Display::get_default()) {
-                if(auto clipboard = display->get_clipboard()) {
+            if(auto display= Gdk::Display::get_default()) {
+                if(auto clipboard= display->get_clipboard()) {
                     clipboard->set_text(Glib::ustring(content));
                 }
             }
@@ -25,7 +25,7 @@ static void appendCopyAndToViewButtons(Gtk::Box &row, InstFormatUI *pUI,
     });
 
     pToViewBtn->signal_clicked().connect([pUI, getContent] {
-        auto content = getContent();
+        auto content= getContent();
         if(!content.empty()) {
             pUI->signal_put_to_output.emit(content);
         }
@@ -47,7 +47,7 @@ InstFormatUI::InstFormatUI(const InstTypeRelationEntity &format)
 
 void InstFormatUI::setupAssemblyDisplay()
 {
-    auto pAsmArea = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    auto pAsmArea= Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
     pAsmArea->set_hexpand(true);
     auto pAsmTitle= Gtk::make_managed<Gtk::Label>("Assembly =");
     pAsmTitle->set_margin_end(8);
@@ -86,13 +86,13 @@ void InstFormatUI::setupBinaryDisplay()
 
 void InstFormatUI::setupHexDisplay()
 {
-    auto pHexArea = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    auto pHexArea= Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
     pHexArea->set_hexpand(true);
     auto pHexTitle= Gtk::make_managed<Gtk::Label>("Hexadecimal =");
     pHexTitle->set_margin_end(8);
     pHexArea->append(*pHexTitle);
 
-    pHexLabel_ = Gtk::make_managed<Gtk::Label>("0x00000000");
+    pHexLabel_= Gtk::make_managed<Gtk::Label>("0x00000000");
     pHexLabel_->set_margin_end(8);
     pHexArea->append(*pHexLabel_);
 
@@ -212,14 +212,14 @@ std::string InstFormatUI::getAssemblyContent() const
     std::string result;
     for(const std::string &key: format_.instTypeV_) {
         if(key == ",") {
-            result += ", ";
+            result+= ", ";
             continue;
         }
-        auto it = AsmFieldWidgets_.find(key);
+        auto it= AsmFieldWidgets_.find(key);
         if(it != AsmFieldWidgets_.end() && it->second->mLabel_) {
-            result += it->second->mLabel_->get_text().raw();
+            result+= it->second->mLabel_->get_text().raw();
             if(key == "mnemonic") {
-                result += " ";
+                result+= " ";
             }
         }
     }
@@ -230,11 +230,11 @@ std::string InstFormatUI::getBinaryContent() const
 {
     std::string result;
     for(const auto &elem: format_.binaryV_) {
-        auto it = BinaryFieldWidgets_.find(elem.name_);
+        auto it= BinaryFieldWidgets_.find(elem.name_);
         if(it != BinaryFieldWidgets_.end()) {
             for(auto *label: it->second->controlLabels_) {
                 if(label) {
-                    result += label->get_text().raw();
+                    result+= label->get_text().raw();
                 }
             }
         }
@@ -300,17 +300,17 @@ InstTypeRelationEntity createITypeFormat()
     };
 
     iFormat.binaryFieldRelations_= {
-        { "opcode", { "mnemonic", "funct3", "imm" } },
-        { "funct3", { "mnemonic", "opcode", "imm" } },
+        { "opcode", { "mnemonic", "funct3", "imm" }    },
+        { "funct3", { "mnemonic", "opcode", "imm" }    },
         { "imm",    { "mnemonic", "opcode", "funct3" } },
         { "rd",     { "rd" }                           },
         { "rs1",    { "rs1" }                          },
     };
     iFormat.asmFieldRelations= {
         { "mnemonic", { "opcode", "funct3", "imm" } },
-        { "rd",       { "rd" }                     },
-        { "rs1",      { "rs1" }                    },
-        { "imm",      { "imm" }                    },
+        { "rd",       { "rd" }                      },
+        { "rs1",      { "rs1" }                     },
+        { "imm",      { "imm" }                     },
     };
 
     return iFormat;
@@ -324,25 +324,25 @@ InstTypeRelationEntity createJTypeFormat()
     jFormat.fmt_      = InstFormat::J;
     jFormat.instTypeV_= { "mnemonic", "rd", ",", "imm" };
     jFormat.binaryV_  = {
-        { "imm20",    31, 31, "imm[20]"   },
-        { "imm10_1",  21, 30, "imm[10:1]" },
-        { "imm11",    20, 20, "imm[11]"   },
+        { "imm20",    31, 31, "imm[20]"    },
+        { "imm10_1",  21, 30, "imm[10:1]"  },
+        { "imm11",    20, 20, "imm[11]"    },
         { "imm19_12", 12, 19, "imm[19:12]" },
-        { "rd",       7,  11, "rd"        },
-        { "opcode",   0,  6,  "opcode"    },
+        { "rd",       7,  11, "rd"         },
+        { "opcode",   0,  6,  "opcode"     },
     };
 
     jFormat.binaryFieldRelations_= {
         { "opcode",   { "mnemonic" } },
-        { "imm20",    { "imm" } },
-        { "imm10_1",  { "imm" } },
-        { "imm11",    { "imm" } },
-        { "imm19_12", { "imm" } },
-        { "rd",       { "rd" } },
+        { "imm20",    { "imm" }      },
+        { "imm10_1",  { "imm" }      },
+        { "imm11",    { "imm" }      },
+        { "imm19_12", { "imm" }      },
+        { "rd",       { "rd" }       },
     };
     jFormat.asmFieldRelations= {
-        { "mnemonic", { "opcode" } },
-        { "rd",       { "rd" } },
+        { "mnemonic", { "opcode" }                                },
+        { "rd",       { "rd" }                                    },
         { "imm",      { "imm20", "imm10_1", "imm11", "imm19_12" } },
     };
 
@@ -364,12 +364,12 @@ InstTypeRelationEntity createUTypeFormat()
 
     uFormat.binaryFieldRelations_= {
         { "opcode",   { "mnemonic" } },
-        { "imm31_12", { "imm" } },
-        { "rd",       { "rd" } },
+        { "imm31_12", { "imm" }      },
+        { "rd",       { "rd" }       },
     };
     uFormat.asmFieldRelations= {
-        { "mnemonic", { "opcode" } },
-        { "rd",       { "rd" } },
+        { "mnemonic", { "opcode" }   },
+        { "rd",       { "rd" }       },
         { "imm",      { "imm31_12" } },
     };
 
@@ -385,26 +385,26 @@ InstTypeRelationEntity createSTypeFormat()
     sFormat.instTypeV_= { "mnemonic", "rs2", ",", "imm", "(", "rs1", ")" };
     sFormat.binaryV_  = {
         { "imm11_5", 25, 31, "imm[11:5]" },
-        { "rs2",     20, 24, "rs2"      },
-        { "rs1",     15, 19, "rs1"      },
-        { "funct3",  12, 14, "funct3"   },
-        { "imm4_0",  7,  11, "imm[4:0]" },
-        { "opcode",  0,  6,  "opcode"   },
+        { "rs2",     20, 24, "rs2"       },
+        { "rs1",     15, 19, "rs1"       },
+        { "funct3",  12, 14, "funct3"    },
+        { "imm4_0",  7,  11, "imm[4:0]"  },
+        { "opcode",  0,  6,  "opcode"    },
     };
 
     sFormat.binaryFieldRelations_= {
         { "opcode",  { "mnemonic", "funct3" } },
         { "funct3",  { "mnemonic", "opcode" } },
-        { "imm11_5", { "imm" } },
-        { "imm4_0",  { "imm" } },
-        { "rs1",     { "rs1" } },
-        { "rs2",     { "rs2" } },
+        { "imm11_5", { "imm" }                },
+        { "imm4_0",  { "imm" }                },
+        { "rs1",     { "rs1" }                },
+        { "rs2",     { "rs2" }                },
     };
     sFormat.asmFieldRelations= {
-        { "mnemonic", { "opcode", "funct3" } },
-        { "rs2",      { "rs2" } },
+        { "mnemonic", { "opcode", "funct3" }  },
+        { "rs2",      { "rs2" }               },
         { "imm",      { "imm11_5", "imm4_0" } },
-        { "rs1",      { "rs1" } },
+        { "rs1",      { "rs1" }               },
     };
 
     return sFormat;
@@ -418,30 +418,30 @@ InstTypeRelationEntity createBTypeFormat()
     bFormat.fmt_      = InstFormat::B;
     bFormat.instTypeV_= { "mnemonic", "rs1", ",", "rs2", ",", "imm" };
     bFormat.binaryV_  = {
-        { "imm12",    31, 31, "imm[12]"   },
-        { "imm10_5",  25, 30, "imm[10:5]" },
-        { "rs2",      20, 24, "rs2"       },
-        { "rs1",      15, 19, "rs1"       },
-        { "funct3",   12, 14, "funct3"    },
-        { "imm4_1",   8,  11, "imm[4:1]"  },
-        { "imm11",    7,  7,  "imm[11]"   },
-        { "opcode",   0,  6,  "opcode"    },
+        { "imm12",   31, 31, "imm[12]"   },
+        { "imm10_5", 25, 30, "imm[10:5]" },
+        { "rs2",     20, 24, "rs2"       },
+        { "rs1",     15, 19, "rs1"       },
+        { "funct3",  12, 14, "funct3"    },
+        { "imm4_1",  8,  11, "imm[4:1]"  },
+        { "imm11",   7,  7,  "imm[11]"   },
+        { "opcode",  0,  6,  "opcode"    },
     };
 
     bFormat.binaryFieldRelations_= {
         { "opcode",  { "mnemonic", "funct3" } },
         { "funct3",  { "mnemonic", "opcode" } },
-        { "imm12",   { "imm" } },
-        { "imm10_5", { "imm" } },
-        { "imm4_1",  { "imm" } },
-        { "imm11",   { "imm" } },
-        { "rs1",     { "rs1" } },
-        { "rs2",     { "rs2" } },
+        { "imm12",   { "imm" }                },
+        { "imm10_5", { "imm" }                },
+        { "imm4_1",  { "imm" }                },
+        { "imm11",   { "imm" }                },
+        { "rs1",     { "rs1" }                },
+        { "rs2",     { "rs2" }                },
     };
     bFormat.asmFieldRelations= {
-        { "mnemonic", { "opcode", "funct3" } },
-        { "rs1",      { "rs1" } },
-        { "rs2",      { "rs2" } },
+        { "mnemonic", { "opcode", "funct3" }                    },
+        { "rs1",      { "rs1" }                                 },
+        { "rs2",      { "rs2" }                                 },
         { "imm",      { "imm12", "imm10_5", "imm4_1", "imm11" } },
     };
 

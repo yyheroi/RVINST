@@ -41,18 +41,18 @@ void IType::mnemonicHelper()
         return;
     }
 
-    const int32_t imm= static_cast<int32_t>(static_cast<int16_t>(Layout_.I.imm0tB & 0xFFF));
+    const int32_t imm       = static_cast<int32_t>(static_cast<int16_t>(Layout_.I.imm0tB & 0xFFF));
     const std::string immStr= std::to_string(imm);
 
     if(opc == 0x0F) {
         auto z= isa::LOOKUP_REG_NAME(0, HasSetABI_);
-        appendOperands({" ", z, ",", z, ",", std::string_view(immStr) });
+        appendOperands({ " ", z, ",", z, ",", std::string_view(immStr) });
         return;
     }
 
     auto rd = isa::LOOKUP_REG_NAME(Layout_.I.rd, HasSetABI_);
     auto rs1= isa::LOOKUP_REG_NAME(Layout_.I.rs1, HasSetABI_);
-    appendOperands({" ", rd, ",", rs1, ",", std::string_view(immStr) });
+    appendOperands({ " ", rd, ",", rs1, ",", std::string_view(immStr) });
 }
 
 const std::vector<std::string> &IType::Disassembly()
@@ -75,7 +75,7 @@ const InstLayout &IType::Assembly()
     const auto &info= LookupIdxAndInfo();
 
     Layout_.I.opc= Opcode_= info.opcode_;
-    const uint16_t key= info.funct_;
+    const uint16_t key    = info.funct_;
 
     if(info.opcode_ == 0x13) {
         Layout_.I.fct3  = key & 7;

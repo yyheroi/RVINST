@@ -1,11 +1,9 @@
 #include <gtkmm.h>
 #include <cctype>
 #include <exception>
-#include <format>
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <ranges>
 #include <sstream>
 #include <string_view>
 #include <cassert>
@@ -13,6 +11,8 @@
 #include <ctime>
 #include "Core/InstTypeFactory.hh"
 #include "ISA/InstFormat.hh"
+#include "Gui/InsEntryParse.hh"
+#include "Gui/InstructionSummaryText.hh"
 #include "Gui/RISCVInstructionWindow.hh"
 
 RISCVInstructionWindow::RISCVInstructionWindow(): InsEntry_(Gtk::make_managed<Gtk::Entry>()),
@@ -54,6 +54,8 @@ RISCVInstructionWindow::RISCVInstructionWindow(): InsEntry_(Gtk::make_managed<Gt
     uiContainer_->append(*InsTextView_);
     set_child(*uiContainer_);
 }
+
+void RISCVInstructionWindow::parseCurrentEntry() { onInsButtonParseClicked(); }
 
 void RISCVInstructionWindow::initInstFormatUI()
 {
@@ -122,43 +124,9 @@ void RISCVInstructionWindow::hideAllTypeUI()
     bTypeUI_->hide();
 }
 
-static bool looksLikeHex(std::string_view s)
-{
-    if(s.empty()) return false;
-    size_t start= 0;
-    if(s.size() >= 2 && (s.substr(0, 2) == "0x" || s.substr(0, 2) == "0X")) {
-        start= 2;
-    }
-    if(start >= s.size()) return false;
-    return std::ranges::all_of(s.substr(start), [](unsigned char c) { return std::isxdigit(c); });
-}
-
-static bool looksLikeBinary(std::string_view s)
-{
-    if(s.empty()) return false;
-    std::string_view digits;
-    if(s.size() >= 2 && (s.substr(0, 2) == "0b" || s.substr(0, 2) == "0B")) {
-        digits= s.substr(2);
-    } else {
-        // No prefix: treat as binary only if all 0/1 and length >= 1 (avoids conflict with short hex like "ff", "33")
-        digits= s;
-        if(digits.size() < 2) return false;
-    }
-    if(digits.empty() || digits.size() > 32) return false;
-    return std::ranges::all_of(digits, [](unsigned char c) { return c == '0' || c == '1'; });
-}
-
-static std::string_view getBinaryDigits(std::string_view s)
-{
-    if(s.size() >= 2 && (s.substr(0, 2) == "0b" || s.substr(0, 2) == "0B")) {
-        return s.substr(2);
-    }
-    return s;
-}
-
 void RISCVInstructionWindow::onInsButtonParseClicked()
 {
-    int ret   = 0;
+    int ret  = 0;
     auto text= InsEntry_->get_text();
     if(text.empty()) {
         showError("invalid input: empty");
@@ -169,34 +137,14 @@ void RISCVInstructionWindow::onInsButtonParseClicked()
 
     try {
         delete pInst_;
-        pInst_= nullptr;
-        // Check binary before hex: "000...00110011" (all 0/1, len>=8) is binary; "0x33" stays hex
-        if(looksLikeBinary(inputStr)) {
-            std::string cleanStr(getBinaryDigits(inputStr));
-            uint64_t value= std::stoull(cleanStr, nullptr, 2);
-            if(value > 0xFFFFFFFFULL) {
-                throw std::out_of_range("instruction value out of 32-bit range");
-            }
-            uint32_t instructionNum= static_cast<uint32_t>(value);
-            pInst_                 = new Instruction(instructionNum, hasSetABI_);
-        } else if(looksLikeHex(inputStr)) {
-            std::string cleanStr= inputStr;
-            if(cleanStr.size() >= 2 && (cleanStr.substr(0, 2) == "0x" || cleanStr.substr(0, 2) == "0X")) {
-                cleanStr= cleanStr.substr(2);
-            }
-            uint64_t value= std::stoull(cleanStr, nullptr, 16);
-            if(value > 0xFFFFFFFFULL) {
-                throw std::out_of_range("instruction value out of 32-bit range");
-            }
-            uint32_t instructionNum= static_cast<uint32_t>(value);
-            pInst_                 = new Instruction(instructionNum, hasSetABI_);
-        } else {
-            pInst_= new Instruction(inputStr, hasSetABI_);
+        pInst_     = nullptr;
+        auto parsed= instructionFromInsEntryLine(inputStr, hasSetABI_);
+        if(!parsed) {
+            showError("invalid input: empty");
+            return;
         }
+        pInst_= parsed.release();
 
-        if(pInst_ == nullptr) {
-            throw std::invalid_argument("Failed to create instruction instance");
-        }
         ret= pInst_->Decode();
         if(ret <= 0) {
             throw std::invalid_argument("Failed to decode instruction");
@@ -256,10 +204,7 @@ void RISCVInstructionWindow::showInsResult(Instruction &inst)
         return;
     }
 
-    std::ostringstream oss;
-    oss << "Format          = " << std::hex << inst.GetFormat() << '\n';
-    oss << "Instruction set = " << inst.GetXLEN() << "\n";
-    buffer->set_text(oss.str());
+    buffer->set_text(instructionSummaryTextForTextView(inst));
 
     if(pCurrUi) {
         UpdateDisplay(*pCurrUi, inst);
@@ -275,7 +220,7 @@ void RISCVInstructionWindow::showError(const std::string &message)
 {
     hideAllTypeUI();
     delete pInst_;
-    pInst_= nullptr;
+    pInst_     = nullptr;
     auto buffer= InsTextView_->get_buffer();
     if(buffer) {
         buffer->set_text("Error: " + message);
@@ -340,11 +285,11 @@ void RISCVInstructionWindow::setupSettingsPopover()
     auto pIsaChoices= Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
     pIsaChoices->set_margin(6);
 
-    const std::vector<std::pair<Glib::ustring, int>> isaOpts{
-        {"AUTO",  0},
-        {"RV32I", 1},
-        {"RV64I", 2},
-        {"RV128I", 3},
+    const std::vector<std::pair<Glib::ustring, int>> isaOpts {
+        { "AUTO",   0 },
+        { "RV32I",  1 },
+        { "RV64I",  2 },
+        { "RV128I", 3 },
     };
 
     for(const auto &[label, idx]: isaOpts) {
