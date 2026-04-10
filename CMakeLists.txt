@@ -135,7 +135,11 @@ add_executable(${PROJECT_NAME}_gui_rv32i_demo
 target_sources(${PROJECT_NAME}_gui_rv32i_demo PRIVATE inc/Gui/Rv32iInstructionCases.hh)
 
 foreach(_t ${PROJECT_NAME}_gui ${PROJECT_NAME}_gui_rv32i_demo)
-    target_link_libraries(${_t} PRIVATE ${backend} ${GTKMM_LIBRARIES})
+    target_link_libraries(${_t} PRIVATE
+        ${backend}
+        ${GTKMM_LIBRARIES}
+        $<$<CONFIG:Debug>:Logger>
+    )
     target_include_directories(${_t} SYSTEM PRIVATE ${GTKMM_INCLUDE_DIRS})
     set_target_properties(${_t} PROPERTIES SUFFIX ".exe")
 endforeach()
