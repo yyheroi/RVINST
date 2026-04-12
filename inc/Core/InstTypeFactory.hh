@@ -9,9 +9,11 @@ class InstTypeFactory {
 private:
     const static inline std::unordered_map<uint16_t, InstFormat> G_Opcode2Format= {
         // Opcode -> Instruction format mapping table (RISC-V standard opcode)
-        { 0x33, InstFormat::R }, // R-type: add/sub/sll/slt etc.
+        { 0x33, InstFormat::R }, // R-type: add/sub/sll/slt etc. (OP)
+        { 0x3B, InstFormat::R }, // R-type: addw/subw/... (OP-32, RV64I)
         { 0x03, InstFormat::I }, // I-type: lb/lh/lw/...
-        { 0x13, InstFormat::I }, // I-type: addi/slli/...
+        { 0x13, InstFormat::I }, // I-type: addi/slli/... (OP-IMM)
+        { 0x1B, InstFormat::I }, // I-type: addiw/slliw/... (OP-IMM-32, RV64I)
         { 0x17, InstFormat::U }, // U-type: auipc
         { 0x37, InstFormat::U }, // U-type: lui
         { 0x67, InstFormat::I }, // I-type: jalr

@@ -194,7 +194,8 @@ std::string randomizeRegisters(const std::string &assembly)
     }
 
     case OpcodeCat::OpImm:
-        if(mnemonic == "slli" || mnemonic == "srli" || mnemonic == "srai") {
+        if(mnemonic == "slli" || mnemonic == "srli" || mnemonic == "srai" || mnemonic == "slliw" || mnemonic == "srliw"
+           || mnemonic == "sraiw") {
             const int imm= shiftImmDist(rng);
             return mnemonic + " " + randReg() + ", " + randReg() + ", " + std::to_string(imm);
         }
@@ -226,7 +227,7 @@ protected:
     void on_activate() override
     {
         auto *win= new RISCVInstructionWindow();
-        win->set_title("RV32I demo — one instruction every 0.5 s");
+        win->set_title("RV32I/RV64I demo — one instruction every 0.5 s");
         add_window(*win);
 
         auto idx      = std::make_shared<std::size_t>(0);

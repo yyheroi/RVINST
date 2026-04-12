@@ -80,6 +80,10 @@ const InstLayout &IType::Assembly()
     if(info.opcode_ == 0x13) {
         Layout_.I.fct3  = key & 7;
         Layout_.I.imm0tB= (static_cast<uint32_t>((key >> 3) & 0x7F) << 5);
+    } else if(info.opcode_ == 0x1B) {
+        const uint16_t k= key & 0xFFF;
+        Layout_.I.fct3  = k & 7;
+        Layout_.I.imm0tB= (static_cast<uint32_t>((k >> 3) & 0x7F) << 5);
     } else if(info.opcode_ == 0x73) {
         Layout_.I.fct3  = 0;
         Layout_.I.imm0tB= static_cast<uint32_t>(key & 0xFFF);
@@ -101,7 +105,7 @@ const InstLayout &IType::Assembly()
             Layout_.I.rs1= *rs1Opt;
         }
         const int32_t imm= std::stoi(InstAssembly_.at(3));
-        if(info.opcode_ == 0x13) {
+        if(info.opcode_ == 0x13 || info.opcode_ == 0x1B) {
             if(Layout_.I.fct3 == 1 || Layout_.I.fct3 == 5) {
                 Layout_.I.imm0tB= (Layout_.I.imm0tB & UINT32_C(0xFE0)) | (static_cast<uint32_t>(imm) & 0x1F);
             } else {
@@ -122,6 +126,9 @@ IBaseInstType::KeyT IType::calculateFunctKey()
     switch(Layout_.I.opc) {
     case 0x13:
         FunctKey_= static_cast<KeyT>(((Layout_.I.imm0tB >> 5) << 3) | Layout_.I.fct3);
+        break;
+    case 0x1B:
+        FunctKey_= static_cast<KeyT>(0x1000u | (((Layout_.I.imm0tB >> 5) & 0x7Fu) << 3) | Layout_.I.fct3);
         break;
     case 0x73:
         FunctKey_= static_cast<KeyT>((0x73u << 8) | (Layout_.I.imm0tB & 0xFFFu));

@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-/** One sample assembly line per RV32I (+ Zifencei fence.i) mnemonic supported by INST. */
+/** One sample assembly line per supported mnemonic (RV32I / RV64I / Zifencei). */
 struct Rv32iInstructionCase {
     const char *assembly;
     const char *expectedMnemonic;

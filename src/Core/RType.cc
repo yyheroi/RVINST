@@ -73,8 +73,9 @@ const InstLayout &RType::Assembly()
     const auto &[_1, _2, functKey, opc]= LookupIdxAndInfo();
 
     Layout_.R.opc= Opcode_= opc;
-    Layout_.R.fct7        = functKey >> 3;
-    Layout_.R.fct3        = functKey & 7;
+    const KeyT functLow   = functKey & 0x3FF;
+    Layout_.R.fct7        = functLow >> 3;
+    Layout_.R.fct3        = functLow & 7;
 
     if(InstAssembly_.size() >= 4U) {
         auto rdOpt = isa::LOOKUP_REG_IDX(InstAssembly_.at(1));
@@ -94,7 +95,8 @@ const InstLayout &RType::Assembly()
 
 IBaseInstType::KeyT RType::calculateFunctKey()
 {
-    FunctKey_= Layout_.R.fct7 << 3 | Layout_.R.fct3;
+    const KeyT low= static_cast<KeyT>((Layout_.R.fct7 << 3) | Layout_.R.fct3);
+    FunctKey_     = Layout_.R.opc == 0x3B ? static_cast<KeyT>(0x400u | low) : low;
     return FunctKey_;
 }
 

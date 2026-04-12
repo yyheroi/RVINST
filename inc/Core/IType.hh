@@ -17,6 +17,12 @@ constexpr uint16_t OPC_F3(uint8_t opc, uint8_t f3)
     return (static_cast<uint16_t>(opc) << 8) | static_cast<uint16_t>(f3 & 7);
 }
 
+// OP-IMM-32 (0x1B): same low layout as OP_IMM with 0x1000 OR'd so addi vs addiw decode differently.
+constexpr uint16_t OP_IMM32_KEY(uint16_t imm7_f3)
+{
+    return static_cast<uint16_t>(0x1000u | (imm7_f3 & 0xFFFu));
+}
+
 } // namespace ITypeKey
 
 class IType: public IBaseInstType {

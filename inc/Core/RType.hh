@@ -3,6 +3,14 @@
 
 #include "IBaseInstType.hh"
 
+namespace RTypeKey {
+// OP-32 (0x3B): funct table key = 0x400 | (funct7<<3)|funct3 so it does not collide with OP (0x33).
+constexpr uint16_t OP32(uint16_t f7_f3)
+{
+    return static_cast<uint16_t>(0x400u | (f7_f3 & 0x3FFu));
+}
+} // namespace RTypeKey
+
 class RType: public IBaseInstType {
 public:
     // RV32I R-type (OP opcode 0x33): functKey = (funct7 << 3) | funct3
