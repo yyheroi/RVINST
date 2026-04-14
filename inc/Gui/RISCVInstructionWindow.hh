@@ -32,7 +32,7 @@ public:
 
 public:
     RISCVInstructionWindow();
-    ~RISCVInstructionWindow()= default;
+    ~RISCVInstructionWindow() override;
 
     /** Same as clicking "Parse Instruction" (for scripted / demo UI). */
     void parseCurrentEntry();

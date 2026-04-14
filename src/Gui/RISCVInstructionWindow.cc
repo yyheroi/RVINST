@@ -55,6 +55,20 @@ RISCVInstructionWindow::RISCVInstructionWindow(): InsEntry_(Gtk::make_managed<Gt
     set_child(*uiContainer_);
 }
 
+RISCVInstructionWindow::~RISCVInstructionWindow()
+{
+    // Ensure button-owned popovers are detached before widget finalization.
+    if(pIsaMenuBtn_) {
+        gtk_menu_button_set_popover(GTK_MENU_BUTTON(pIsaMenuBtn_->gobj()), nullptr);
+    }
+    if(pSettingsPopover_) {
+        pSettingsPopover_->popdown();
+        pSettingsPopover_->unparent();
+    }
+    delete pInst_;
+    pInst_= nullptr;
+}
+
 void RISCVInstructionWindow::parseCurrentEntry() { onInsButtonParseClicked(); }
 
 void RISCVInstructionWindow::initInstFormatUI()
